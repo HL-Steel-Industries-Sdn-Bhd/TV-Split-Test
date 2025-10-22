@@ -2,41 +2,66 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>HL Steel Dashboard</title>
+  <title>HL Steel Multi-Panel Dashboard</title>
   <style>
-    body {
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
       display: flex;
       height: 100vh;
       width: 100vw;
-      overflow: hidden;
       background-color: #000;
+      overflow: hidden;
+    }
+
+    /* 左边区块 */
+    .left {
+      flex: 3;
+      height: 100%;
+      border-right: 3px solid #222;
+    }
+
+    /* 右边区块 */
+    .right {
+      flex: 7;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .top, .bottom {
+      flex: 1;
+      border-bottom: 3px solid #222;
+    }
+
+    .bottom {
+      border-bottom: none;
     }
 
     iframe {
-      border: none;
+      width: 100%;
       height: 100%;
-      width: 50%;
-    }
-
-    .left {
-      width: 50%;
-    }
-
-    .right {
-      width: 50%;
-    }
-
-    /* 可选：在电视大屏上更好视觉分隔 */
-    .divider {
-      width: 4px;
-      background: #222;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <iframe class="left" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule2/"></iframe>
-  <div class="divider"></div>
-  <iframe class="right" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+  <div class="left">
+    <iframe src="https://hl-steel-industries-sdn-bhd.github.io/Work-Point-Sample/"></iframe>
+  </div>
+
+  <div class="right">
+    <div class="top">
+      <iframe src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+    </div>
+    <div class="bottom">
+      <iframe src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule2/"></iframe>
+    </div>
+  </div>
 </body>
 </html>
+
