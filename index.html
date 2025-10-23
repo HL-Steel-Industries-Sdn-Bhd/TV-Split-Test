@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>HL Steel Multi-Panel Dashboard</title>
+  <title>HL Steel Dashboard - Auto Refresh</title>
   <style>
     * {
       margin: 0;
@@ -16,30 +16,33 @@
       width: 100vw;
       background-color: #000;
       overflow: hidden;
+      position: relative;
+      font-family: Arial, sans-serif;
     }
 
     /* 左边区块 */
     .left {
-      flex: 3;
+      flex: 25;
       height: 100%;
       border-right: 3px solid #222;
+      position: relative;
     }
 
     /* 右边区块 */
     .right {
-      flex: 7;
+      flex: 75;
       display: flex;
       flex-direction: column;
       height: 100%;
     }
 
-    .top, .bottom {
-      flex: 1;
+    .top {
+      flex: 35;
       border-bottom: 3px solid #222;
     }
 
     .bottom {
-      border-bottom: none;
+      flex: 65;
     }
 
     iframe {
@@ -47,21 +50,63 @@
       height: 100%;
       border: none;
     }
+
+    /* 左上角时间与计数显示 */
+    #overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #00ffcc;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
   <div class="left">
-    <iframe src="https://hl-steel-industries-sdn-bhd.github.io/Work-Point-Sample/"></iframe>
+    <iframe id="frame-left" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+    <div id="overlay">载入中...</div>
   </div>
 
   <div class="right">
     <div class="top">
-      <iframe src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+      <iframe id="frame-top" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/"></iframe>
     </div>
     <div class="bottom">
-      <iframe src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule2/"></iframe>
+      <iframe id="frame-bottom" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule2/"></iframe>
     </div>
   </div>
+
+  <script>
+    let counter = 0;
+
+    function updateOverlay() {
+      const now = new Date();
+      const timeStr = now.toLocaleString('zh-CN', { hour12: false });
+      document.getElementById('overlay').textContent =
+        `时间：${timeStr} ｜ 刷新次数：${counter}`;
+    }
+
+    function refreshAll() {
+      counter++;
+      document.getElementById('frame-left').contentWindow.location.reload(true);
+      document.getElementById('frame-top').contentWindow.location.reload(true);
+      document.getElementById('frame-bottom').contentWindow.location.reload(true);
+      updateOverlay();
+    }
+
+    // 初始显示时间
+    updateOverlay();
+    // 每秒更新时间
+    setInterval(updateOverlay, 1000);
+    // 每30秒刷新所有iframe
+    setInterval(refreshAll, 30000);
+  </script>
 </body>
 </html>
+
 
