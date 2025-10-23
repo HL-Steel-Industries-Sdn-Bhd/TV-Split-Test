@@ -66,8 +66,8 @@
       transform-origin: top left;
     }
 
-    /* 左上角时间与计数显示 */
-    #overlay {
+    /* 各个 overlay */
+    .overlay {
       position: absolute;
       top: 10px;
       left: 10px;
@@ -75,9 +75,10 @@
       background: rgba(0, 0, 0, 0.4);
       padding: 6px 10px;
       border-radius: 6px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       z-index: 10;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -85,33 +86,48 @@
   <div class="left">
     <div class="frame-wrapper">
       <iframe id="frame-left" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+      <div id="overlay-left" class="overlay">载入中...</div>
     </div>
-    <div id="overlay">载入中...</div>
   </div>
 
   <div class="right">
     <div class="top">
       <div class="frame-wrapper">
         <iframe id="frame-top" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/"></iframe>
+        <div id="overlay-top" class="overlay">载入中...</div>
       </div>
     </div>
     <div class="bottom">
       <div class="frame-wrapper">
-        <iframe id="frame-bottom" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule2/"></iframe>
+        <iframe id="frame-bottom" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule3/"></iframe>
+        <div id="overlay-bottom" class="overlay">载入中...</div>
       </div>
     </div>
   </div>
 
   <script>
-    let counter = 0;
-
-    // 各区块的缩放倍率（可自行微调）
+    // 各 frame 的缩放倍率
     const scaleSettings = {
-      "frame-left": 0.85,   // 左边排行榜
-      "frame-top": 0.9,     // 右上排行榜
-      "frame-bottom": 0.7   // 右下排班表
+      "frame-left": 0.85,
+      "frame-top": 0.9,
+      "frame-bottom": 0.7
     };
 
+    // 各 frame 的刷新频率（毫秒）
+    const refreshIntervals = {
+      "frame-left": 10000,   // 10秒
+      "frame-top": 15000,    // 15秒
+      "frame-bottom": 20000  // 60秒
+    };
+
+    // 刷新计数记录
+    const refreshCount = {
+      "frame-left": 0,
+      "frame-top": 0,
+      "frame-bottom": 0
+    };
+
+    // 缩放应用
     function applyScaling() {
       for (const id in scaleSettings) {
         const iframe = document.getElementById(id);
@@ -122,29 +138,35 @@
       }
     }
 
-    function updateOverlay() {
+    // 更新时间与计数显示
+    function updateOverlay(id) {
       const now = new Date();
       const timeStr = now.toLocaleString('zh-CN', { hour12: false });
-      document.getElementById('overlay').textContent =
-        `时间：${timeStr} ｜ 刷新次数：${counter}`;
+      document.getElementById(`overlay-${id.split('-')[1]}`).textContent =
+        `时间：${timeStr} ｜ 刷新次数：${refreshCount[id]}`;
     }
 
-    function refreshAll() {
-      counter++;
-      document.getElementById('frame-left').contentWindow.location.reload(true);
-      document.getElementById('frame-top').contentWindow.location.reload(true);
-      document.getElementById('frame-bottom').contentWindow.location.reload(true);
-      updateOverlay();
+    // 刷新单个 iframe
+    function refreshFrame(id) {
+      const iframe = document.getElementById(id);
+      iframe.contentWindow.location.reload(true);
+      refreshCount[id]++;
+      updateOverlay(id);
     }
 
-    // 初始化
+    // 初始化缩放与时间
     applyScaling();
-    updateOverlay();
+    for (const id in refreshIntervals) {
+      updateOverlay(id);
+      // 各自独立的刷新计时器
+      setInterval(() => refreshFrame(id), refreshIntervals[id]);
+      // 每秒更新时间（不刷新 iframe）
+      setInterval(() => updateOverlay(id), 1000);
+    }
 
-    // 每秒更新时间
-    setInterval(updateOverlay, 1000);
-    // 每30秒刷新所有iframe
-    setInterval(refreshAll, 30000);
+    // 整个页面 5分钟刷新一次
+    setInterval(() => location.reload(true), 5 * 60 * 1000);
   </script>
 </body>
 </html>
+
