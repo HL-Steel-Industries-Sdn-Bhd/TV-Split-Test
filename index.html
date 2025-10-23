@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>HL Steel Dashboard - Auto Refresh</title>
+  <title>HL Steel Dashboard - Auto Refresh + Scaled View</title>
   <style>
     * {
       margin: 0;
@@ -26,6 +26,7 @@
       height: 100%;
       border-right: 3px solid #222;
       position: relative;
+      overflow: hidden;
     }
 
     /* 右边区块 */
@@ -34,6 +35,11 @@
       display: flex;
       flex-direction: column;
       height: 100%;
+    }
+
+    .top, .bottom {
+      position: relative;
+      overflow: hidden;
     }
 
     .top {
@@ -45,10 +51,19 @@
       flex: 65;
     }
 
+    /* 包装层：用于缩放 iframe */
+    .frame-wrapper {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
     iframe {
       width: 100%;
       height: 100%;
       border: none;
+      transform-origin: top left;
     }
 
     /* 左上角时间与计数显示 */
@@ -68,21 +83,44 @@
 </head>
 <body>
   <div class="left">
-    <iframe id="frame-left" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+    <div class="frame-wrapper">
+      <iframe id="frame-left" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+    </div>
     <div id="overlay">载入中...</div>
   </div>
 
   <div class="right">
     <div class="top">
-      <iframe id="frame-top" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/"></iframe>
+      <div class="frame-wrapper">
+        <iframe id="frame-top" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/"></iframe>
+      </div>
     </div>
     <div class="bottom">
-      <iframe id="frame-bottom" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule2/"></iframe>
+      <div class="frame-wrapper">
+        <iframe id="frame-bottom" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule2/"></iframe>
+      </div>
     </div>
   </div>
 
   <script>
     let counter = 0;
+
+    // 各区块的缩放倍率（可自行微调）
+    const scaleSettings = {
+      "frame-left": 0.85,   // 左边排行榜
+      "frame-top": 0.9,     // 右上排行榜
+      "frame-bottom": 0.7   // 右下排班表
+    };
+
+    function applyScaling() {
+      for (const id in scaleSettings) {
+        const iframe = document.getElementById(id);
+        const scale = scaleSettings[id];
+        iframe.style.transform = `scale(${scale})`;
+        iframe.style.width = `${100 / scale}%`;
+        iframe.style.height = `${100 / scale}%`;
+      }
+    }
 
     function updateOverlay() {
       const now = new Date();
@@ -99,8 +137,10 @@
       updateOverlay();
     }
 
-    // 初始显示时间
+    // 初始化
+    applyScaling();
     updateOverlay();
+
     // 每秒更新时间
     setInterval(updateOverlay, 1000);
     // 每30秒刷新所有iframe
@@ -108,5 +148,3 @@
   </script>
 </body>
 </html>
-
-
