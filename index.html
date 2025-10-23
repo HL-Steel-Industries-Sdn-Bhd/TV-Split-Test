@@ -4,98 +4,30 @@
   <meta charset="UTF-8">
   <title>HL Steel Dashboard - Smooth Refresh + Scaled View</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-      background-color: #000;
-      overflow: hidden;
-      position: relative;
-      font-family: Arial, sans-serif;
+      display: flex; height: 100vh; width: 100vw;
+      background-color: #000; overflow: hidden;
+      position: relative; font-family: Arial, sans-serif;
     }
-
-    /* 左边区块 */
-    .left {
-      flex: 25;
-      height: 100%;
-      border-right: 3px solid #222;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* 右边区块 */
-    .right {
-      flex: 75;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .top, .bottom {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .top {
-      flex: 35;
-      border-bottom: 3px solid #222;
-    }
-
-    .bottom {
-      flex: 65;
-    }
-
-    /* 包装层：用于缩放 iframe */
-    .frame-wrapper {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      position: relative;
-    }
-
+    .left { flex: 25; height: 100%; border-right: 3px solid #222; position: relative; overflow: hidden; }
+    .right { flex: 75; display: flex; flex-direction: column; height: 100%; }
+    .top, .bottom { position: relative; overflow: hidden; }
+    .top { flex: 35; border-bottom: 3px solid #222; }
+    .bottom { flex: 65; }
+    .frame-wrapper { width: 100%; height: 100%; overflow: hidden; position: relative; }
     iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      transform-origin: top left;
-      position: absolute;
-      top: 0;
-      left: 0;
-      opacity: 0;
-      transition: opacity 0.6s ease-in-out;
+      width: 100%; height: 100%; border: none;
+      transform-origin: top left; position: absolute; top: 0; left: 0;
+      opacity: 0; transition: opacity 0.6s ease-in-out;
     }
-
-    iframe.visible {
-      opacity: 1;
-      pointer-events: auto;
-      z-index: 2;
-    }
-
-    iframe.hidden {
-      opacity: 0;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* 各个 overlay */
+    iframe.visible { opacity: 1; pointer-events: auto; z-index: 2; }
+    iframe.hidden { opacity: 0; pointer-events: none; z-index: 1; }
     .overlay {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: #00ffcc;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 15px;
-      font-weight: bold;
-      z-index: 10;
-      white-space: nowrap;
+      position: absolute; top: 10px; left: 10px;
+      color: #00ffcc; background: rgba(0,0,0,0.4);
+      padding: 6px 10px; border-radius: 6px; font-size: 15px;
+      font-weight: bold; z-index: 10; white-space: nowrap;
     }
   </style>
 </head>
@@ -107,7 +39,6 @@
       <div id="overlay-left" class="overlay">载入中...</div>
     </div>
   </div>
-
   <div class="right">
     <div class="top">
       <div class="frame-wrapper" id="wrapper-top">
@@ -126,35 +57,15 @@
   </div>
 
   <script>
-    // 各 frame 的缩放倍率
-    const scaleSettings = {
-      "frame-left": 0.85,
-      "frame-top": 0.9,
-      "frame-bottom": 0.7
-    };
-
-    // 各 frame 的刷新频率（毫秒）
-    const refreshIntervals = {
-      "frame-left": 10000,   // 10秒
-      "frame-top": 15000,    // 15秒
-      "frame-bottom": 60000  // 60秒
-    };
-
-    // 刷新计数记录
-    const refreshCount = {
-      "frame-left": 0,
-      "frame-top": 0,
-      "frame-bottom": 0
-    };
-
-    // 各 frame 的原始 URL
+    const scaleSettings = { "frame-left": 0.85, "frame-top": 0.9, "frame-bottom": 0.7 };
+    const refreshIntervals = { "frame-left": 10000, "frame-top": 15000, "frame-bottom": 60000 };
+    const refreshCount = { "frame-left": 0, "frame-top": 0, "frame-bottom": 0 };
     const frameURLs = {
       "frame-left": "https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/",
       "frame-top": "https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/",
       "frame-bottom": "https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule3/"
     };
 
-    // 缩放应用
     function applyScaling() {
       for (const id in scaleSettings) {
         const scale = scaleSettings[id];
@@ -166,7 +77,6 @@
       }
     }
 
-    // 更新时间与计数显示
     function updateOverlay(id) {
       const now = new Date();
       const timeStr = now.toLocaleString('zh-CN', { hour12: false });
@@ -174,23 +84,32 @@
         `时间：${timeStr} ｜ 刷新次数：${refreshCount[id]}`;
     }
 
-    // 平滑刷新 iframe（预载 + 淡入淡出切换）
+    // ✅ 改进版：加锁机制，确保安全切换
+    const refreshing = {};
+
     function smoothRefresh(id) {
+      if (refreshing[id]) return; // 正在刷新时跳过
+      refreshing[id] = true;
+
       const frameA = document.getElementById(`${id}-a`);
       const frameB = document.getElementById(`${id}-b`);
       const active = frameA.classList.contains("visible") ? frameA : frameB;
       const inactive = frameA.classList.contains("visible") ? frameB : frameA;
 
-      inactive.src = frameURLs[id];
+      // 防止快速重复加载
+      inactive.onload = null;
+      inactive.src = frameURLs[id] + "?t=" + Date.now(); // 加时间戳防止缓存
+
       inactive.onload = () => {
+        // 平滑切换
         active.classList.remove("visible");
         active.classList.add("hidden");
         inactive.classList.remove("hidden");
         inactive.classList.add("visible");
 
-        // 清理旧内容
         setTimeout(() => {
           active.src = "about:blank";
+          refreshing[id] = false;
         }, 800);
 
         refreshCount[id]++;
@@ -198,20 +117,17 @@
       };
     }
 
-    // 初始化缩放与时间
     applyScaling();
     for (const id in refreshIntervals) {
       updateOverlay(id);
-      // 各自独立的刷新计时器
       setInterval(() => smoothRefresh(id), refreshIntervals[id]);
-      // 每秒更新时间（不刷新 iframe）
       setInterval(() => updateOverlay(id), 1000);
     }
 
-    // 整个页面 5分钟刷新一次
     setInterval(() => location.reload(true), 5 * 60 * 1000);
   </script>
 </body>
 </html>
+
 
 
