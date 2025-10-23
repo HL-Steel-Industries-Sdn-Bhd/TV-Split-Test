@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>HL Steel Dashboard - Auto Refresh + Scaled View</title>
+  <title>HL Steel Dashboard - Smooth Refresh + Scaled View</title>
   <style>
     * {
       margin: 0;
@@ -64,6 +64,23 @@
       height: 100%;
       border: none;
       transform-origin: top left;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+    }
+
+    iframe.visible {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 2;
+    }
+
+    iframe.hidden {
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
     }
 
     /* 各个 overlay */
@@ -84,22 +101,25 @@
 </head>
 <body>
   <div class="left">
-    <div class="frame-wrapper">
-      <iframe id="frame-left" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+    <div class="frame-wrapper" id="wrapper-left">
+      <iframe id="frame-left-a" class="visible" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/"></iframe>
+      <iframe id="frame-left-b" class="hidden"></iframe>
       <div id="overlay-left" class="overlay">载入中...</div>
     </div>
   </div>
 
   <div class="right">
     <div class="top">
-      <div class="frame-wrapper">
-        <iframe id="frame-top" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/"></iframe>
+      <div class="frame-wrapper" id="wrapper-top">
+        <iframe id="frame-top-a" class="visible" src="https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/"></iframe>
+        <iframe id="frame-top-b" class="hidden"></iframe>
         <div id="overlay-top" class="overlay">载入中...</div>
       </div>
     </div>
     <div class="bottom">
-      <div class="frame-wrapper">
-        <iframe id="frame-bottom" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule3/"></iframe>
+      <div class="frame-wrapper" id="wrapper-bottom">
+        <iframe id="frame-bottom-a" class="visible" src="https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule3/"></iframe>
+        <iframe id="frame-bottom-b" class="hidden"></iframe>
         <div id="overlay-bottom" class="overlay">载入中...</div>
       </div>
     </div>
@@ -117,7 +137,7 @@
     const refreshIntervals = {
       "frame-left": 10000,   // 10秒
       "frame-top": 15000,    // 15秒
-      "frame-bottom": 20000  // 60秒
+      "frame-bottom": 60000  // 60秒
     };
 
     // 刷新计数记录
@@ -127,14 +147,22 @@
       "frame-bottom": 0
     };
 
+    // 各 frame 的原始 URL
+    const frameURLs = {
+      "frame-left": "https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample-3/",
+      "frame-top": "https://hl-steel-industries-sdn-bhd.github.io/Ranking-Sample/",
+      "frame-bottom": "https://hl-steel-industries-sdn-bhd.github.io/Work-Schedule3/"
+    };
+
     // 缩放应用
     function applyScaling() {
       for (const id in scaleSettings) {
-        const iframe = document.getElementById(id);
         const scale = scaleSettings[id];
-        iframe.style.transform = `scale(${scale})`;
-        iframe.style.width = `${100 / scale}%`;
-        iframe.style.height = `${100 / scale}%`;
+        document.querySelectorAll(`#${id}-a, #${id}-b`).forEach(iframe => {
+          iframe.style.transform = `scale(${scale})`;
+          iframe.style.width = `${100 / scale}%`;
+          iframe.style.height = `${100 / scale}%`;
+        });
       }
     }
 
@@ -146,12 +174,28 @@
         `时间：${timeStr} ｜ 刷新次数：${refreshCount[id]}`;
     }
 
-    // 刷新单个 iframe
-    function refreshFrame(id) {
-      const iframe = document.getElementById(id);
-      iframe.contentWindow.location.reload(true);
-      refreshCount[id]++;
-      updateOverlay(id);
+    // 平滑刷新 iframe（预载 + 淡入淡出切换）
+    function smoothRefresh(id) {
+      const frameA = document.getElementById(`${id}-a`);
+      const frameB = document.getElementById(`${id}-b`);
+      const active = frameA.classList.contains("visible") ? frameA : frameB;
+      const inactive = frameA.classList.contains("visible") ? frameB : frameA;
+
+      inactive.src = frameURLs[id];
+      inactive.onload = () => {
+        active.classList.remove("visible");
+        active.classList.add("hidden");
+        inactive.classList.remove("hidden");
+        inactive.classList.add("visible");
+
+        // 清理旧内容
+        setTimeout(() => {
+          active.src = "about:blank";
+        }, 800);
+
+        refreshCount[id]++;
+        updateOverlay(id);
+      };
     }
 
     // 初始化缩放与时间
@@ -159,7 +203,7 @@
     for (const id in refreshIntervals) {
       updateOverlay(id);
       // 各自独立的刷新计时器
-      setInterval(() => refreshFrame(id), refreshIntervals[id]);
+      setInterval(() => smoothRefresh(id), refreshIntervals[id]);
       // 每秒更新时间（不刷新 iframe）
       setInterval(() => updateOverlay(id), 1000);
     }
@@ -169,4 +213,5 @@
   </script>
 </body>
 </html>
+
 
